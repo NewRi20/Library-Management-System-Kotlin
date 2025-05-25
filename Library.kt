@@ -229,40 +229,39 @@ class Library {
     }
 
     fun displayBooks() {
-    // Always reload books from CSV to get the latest availability
-    books.clear()
-    books.addAll(loadBooksFromCSV("books.csv"))
-    println("+----------------------------------------------------------------+")
-    println("|                  LIBRARY MANAGEMENT SYSTEM                     |")    
-    println("+----------------------------------------------------------------+")
-    println("| Title                  | Author         | ISBN         | Avail |")
-    println("+----------------------------------------------------------------+")
-    books.forEach { book ->
-        println("| ${book.title.padEnd(22)} | ${book.author.padEnd(13)} | ${book.isbn.padEnd(12)} | ${if (book.available) "true " else "false  "} |")
+        books.clear()
+        books.addAll(loadBooksFromCSV("books.csv"))
+        println("+----------------------------------------------------------------+")
+        println("|                  LIBRARY MANAGEMENT SYSTEM                     |")    
+        println("+----------------------------------------------------------------+")
+        println("| Title                  | Author         | ISBN         | Avail |")
+        println("+----------------------------------------------------------------+")
+        books.forEach { book ->
+            println("| ${book.title.padEnd(22)} | ${book.author.padEnd(13)} | ${book.isbn.padEnd(12)} | ${if (book.available) "true " else "false  "} |")
+        }
+        println("+----------------------------------------------------------------+")
     }
-    println("+----------------------------------------------------------------+")
-}
     
     fun loadBooksFromCSV(filePath: String): List<Book> {
-    val books = mutableListOf<Book>()
-    try {
-        File(filePath).useLines { lines ->
-            lines.drop(1).forEach { line ->
-                val parts = line.split(",")
-                if (parts.size >= 4) {
-                    val title = parts[0]
-                    val author = parts[1]
-                    val isbn = parts[2]
-                    val available = parts[3].trim().equals("TRUE", ignoreCase = true)
-                    books.add(Book(title, author, isbn, available))
+        val books = mutableListOf<Book>()
+        try {
+            File(filePath).useLines { lines ->
+                lines.drop(1).forEach { line ->
+                    val parts = line.split(",")
+                    if (parts.size >= 4) {
+                        val title = parts[0]
+                        val author = parts[1]
+                        val isbn = parts[2]
+                        val available = parts[3].trim().equals("TRUE", ignoreCase = true)
+                        books.add(Book(title, author, isbn, available))
+                    }
                 }
             }
+        } catch (e: Exception) {
+            println("Error reading CSV: ${e.message}")
         }
-    } catch (e: Exception) {
-        println("Error reading CSV: ${e.message}")
+        return books
     }
-    return books
-}
 
     private fun saveReadChanges(users: List<Users>): Boolean{
         val USER_CSV_FILE = File("user.csv")
