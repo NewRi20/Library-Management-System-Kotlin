@@ -655,7 +655,7 @@ class LogInSignUp{
 }
 
 
-class userReader(var username: String, var password: String){
+class userReader(var username: String, var password: String){ 
 
     init {
         println("+---------------------------------------+")
@@ -677,7 +677,7 @@ class userReader(var username: String, var password: String){
             println("|       LIBRARY MANAGEMENT SYSTEM       |")
             println("+---------------------------------------+")
             println("|  (1) View Library                     |")
-            println("|  (2) Publish a Book                   |")
+            println("|  (2) Publish a Book                   |") //TANGGALIN NLNG TO
             println("|  (3) Borrow a Book                    |")
             println("|  (4) Return a Book                    |")
             println("|  (5) Rate a Book                      |")
@@ -1206,11 +1206,11 @@ class userLibrarian(var username: String, var pass: String, val library: Library
             println("|  (2) Remove a Book                        |")
             println("|  (3) Update Book Info                     |")
             println("|  (4) View All Books                       |")
-            println("|  (5) View Borrowed Books                  |")
-            println("|  (6) View Overdue Books                   |")
-            println("|  (7) Manage Your Account                  |")
-            println("|  (8) View Ratings and Reviews             |")
-            println("|  (9) Generate Library Reports             |")
+            println("|  (5) View Borrowed Books                  |") //TODO
+            println("|  (6) View Overdue Books                   |") //TODO tanggalin nlng to
+            println("|  (7) Manage Your Account                  |") 
+            println("|  (8) View Ratings and Reviews             |") //TODO
+            println("|  (9) Generate Library Reports             |") //TODO
             println("| (10) Log Out                              |")
             println("+-------------------------------------------+")
             print("Select (1-10): ")
