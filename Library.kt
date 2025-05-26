@@ -229,34 +229,30 @@ class Library {
     }
 
     fun displayBooks() {
+        books.clear()
+        books.addAll(loadBooksFromCSV("books.csv"))
         println("+----------------------------------------------------------------+")
-        println("|              LIBRARY MANAGEMENT SYSTEM                         |")
+        println("|                  LIBRARY MANAGEMENT SYSTEM                     |")    
         println("+----------------------------------------------------------------+")
-        println("| Title                  | Author         | ISBN     | Available |")
+        println("| Title                  | Author         | ISBN         | Avail |")
         println("+----------------------------------------------------------------+")
-        for (book in books) {
-            println(
-                "| ${book.title.padEnd(22)} | ${book.author.padEnd(14)} | ${book.isbn.padEnd(8)} | ${book.available.toString().padEnd(9)} |"
-            )
+        books.forEach { book ->
+            println("| ${book.title.padEnd(22)} | ${book.author.padEnd(13)} | ${book.isbn.padEnd(12)} | ${if (book.available) "true " else "false  "} |")
         }
         println("+----------------------------------------------------------------+")
-        println("Press Enter to continue...")
-        scanner.nextLine()
-        readLine()
-        return
     }
     
     fun loadBooksFromCSV(filePath: String): List<Book> {
         val books = mutableListOf<Book>()
         try {
             File(filePath).useLines { lines ->
-                lines.drop(1).forEach { line -> 
+                lines.drop(1).forEach { line ->
                     val parts = line.split(",")
                     if (parts.size >= 4) {
                         val title = parts[0]
                         val author = parts[1]
                         val isbn = parts[2]
-                        val available = parts[3].toBooleanStrictOrNull() ?: true
+                        val available = parts[3].trim().equals("TRUE", ignoreCase = true)
                         books.add(Book(title, author, isbn, available))
                     }
                 }
@@ -677,22 +673,21 @@ class userReader(var username: String, var password: String){
             println("|       LIBRARY MANAGEMENT SYSTEM       |")
             println("+---------------------------------------+")
             println("|  (1) View Library                     |")
-            println("|  (2) Publish a Book                   |") //TANGGALIN NLNG TO
-            println("|  (3) Borrow a Book                    |")
-            println("|  (4) Return a Book                    |")
-            println("|  (5) Rate a Book                      |")
-            println("|  (6) View Borrowed Books              |")
-            println("|  (7) View Reading History             |")
-            println("|  (8) Add to Favorites                 |")
-            println("|  (9) Leave a Review                   |")
-            println("| (10) Manage your Account              |")
-            println("| (11) Log Out                          |")
+            println("|  (2) Borrow a Book                    |")
+            println("|  (3) Return a Book                    |")
+            println("|  (4) Rate a Book                      |")
+            println("|  (5) View Borrowed Books              |")
+            println("|  (6) View Reading History             |")
+            println("|  (7) Add to Favorites                 |")
+            println("|  (8) Leave a Review                   |")
+            println("|  (9) Manage your Account              |")
+            println("|  (10) Log Out                         |")
             println("+---------------------------------------+")
-            print("Select(1-11): ")
+            print("Select(1-10): ")
             
             try {
                 choice = scanner.nextInt()
-                if(choice !in 1..11){
+                if(choice !in 1..10){
                     println("Invalid choice. Please select a number between 1 and 11.")
                     scanner.nextLine()
                 }
@@ -707,22 +702,21 @@ class userReader(var username: String, var password: String){
                     val library = Library()
                     library.MainDashBoard(username)
                 }
-                2 -> publishBook()
-                3 -> borrowBook()
-                4 -> returnBook()
-                5 -> rateBook()
-                6 -> viewBorrowedBooks()
-                7 -> viewReadingHistory()
-                8 -> addToFavorites()
-                9 -> leaveReview()
-                10 -> {
+                2 -> borrowBook()
+                3 -> returnBook()
+                4 -> rateBook()
+                5 -> viewBorrowedBooks()
+                6 -> viewReadingHistory()
+                7 -> addToFavorites()
+                8 -> leaveReview()
+                9 -> {
                     val deleted = manageAccount(scanner)
                     if (deleted) {
                         println("Returning to main menu after account deletion...")
                         return LOGIN_SIGNUP
                     }
                 }
-                11 -> {
+                10 -> {
                     println("Logging out...")
                     return LOGIN_SIGNUP 
                 }
@@ -944,89 +938,69 @@ class userReader(var username: String, var password: String){
         return books
     }
 
-    fun publishBook(){
-        val scanner = Scanner(System.`in`)
-        var bookName: String = ""
-        var isbn: String = ""
-        println("+-------------------------------------------+")
-        println("|           PUBLISH CONTROL PANEL           |")
-        println("+-------------------------------------------+")
-        println("| Publish a Book                            |")
-        println("+-------------------------------------------+")
-        println()
-
-        print("Enter a book name: ")
-        bookName = scanner.nextLine()
-        while(true){
-            try{
-                print("Enter isbn number (5-digit): ")
-                isbn = scanner.next()
-                if(isbn.length != 5){
-                    println("Invalid isbn...")
-                }
-                else {break}
-            }
-            catch (e: Exception){
-                println("Invalid Input...")
-            }
-        }
-        println("Your book \"$bookName\" has been successfully added to the book approval list of librarians.")
-    }
-
     fun borrowBook() {
-        val timestamp = Instant.now().toString()
-
-        val library = Library()
-        library.displayBooks()
-        val scanner = Scanner(System.`in`)
-        print("Enter the ISBN of the book you want to borrow: ")
-        val isbn = scanner.nextLine()
-        val book = library.searchBook(isbn).firstOrNull()
-        if (book != null && book.available) {
-            File("library-data/borrowed_books.csv").appendText("$username,${book.title},${book.author},${book.isbn},$timestamp\n")
-            File("library-data/reading_history.csv").appendText("$username,${book.title},${book.author},${book.isbn},$timestamp\n")
-            val newCount = getBooksRead() + 1
-            updateBooksReadInCSV(newCount)
-            println("You have borrowed \"${book.title}\".")
-        } else {
-            println("Book not available or not found.")
-        }
+    val timestamp = Instant.now().toString()
+    val library = Library()
+    library.displayBooks()
+    val scanner = Scanner(System.`in`)
+    print("Enter the ISBN of the book you want to borrow: ")
+    val isbn = scanner.nextLine()
+    val book = library.books.find { it.isbn == isbn && it.available }
+    if (book != null) {
+        File("library-data/borrowed_books.csv").appendText("$username,${book.title},${book.author},${book.isbn},$timestamp\n")
+        File("library-data/reading_history.csv").appendText("$username,${book.title},${book.author},${book.isbn},$timestamp\n")
+        val newCount = getBooksRead() + 1
+        updateBooksReadInCSV(newCount)
+        // Update availability
+        book.available = false
+        library.saveAllBooks()
+        println("You have borrowed \"${book.title}\".")
+    } else {
+        println("Book not available or not found.")
     }
+}
 
     fun returnBook() {
-        println("+-------------------------------------------+")
-        println("|               RETURN A BOOK               |")
-        println("+-------------------------------------------+")
+    println("+-------------------------------------------+")
+    println("|               RETURN A BOOK               |")
+    println("+-------------------------------------------+")
 
-        val borrowedBooks = getBorrowedBooks()
-        if (borrowedBooks.isEmpty()) {
-            println("You have no borrowed books.")
-            return
-        }
-        println("Your borrowed books:")
-        borrowedBooks.forEachIndexed { idx, book ->
-            println("${idx + 1}. ${book.title} by ${book.author} (ISBN: ${book.isbn})")
-        }
-        val scanner = Scanner(System.`in`)
-        print("Enter the number of the book to return: ")
-        val idx = scanner.nextInt() - 1
-        scanner.nextLine()
-        if (idx in borrowedBooks.indices) {
-            val book = borrowedBooks[idx]
-            val file = File("library-data/borrowed_books.csv")
-            val lines = file.readLines().toMutableList()
-            val filtered = lines.filterIndexed { i, line ->
-                if (i == 0) true else {
-                    val parts = line.split(",")
-                    !(parts[0] == username && parts[3] == book.isbn)
-                }
-            }
-            file.writeText(filtered.joinToString("\n") + "\n")
-            println("You have returned \"${book.title}\".")
-        } else {
-            println("Invalid selection.")
-        }
+    val borrowedBooks = getBorrowedBooks()
+    if (borrowedBooks.isEmpty()) {
+        println("You have no borrowed books.")
+        return
     }
+    println("Your borrowed books:")
+    borrowedBooks.forEachIndexed { idx, book ->
+        println("${idx + 1}. ${book.title} by ${book.author} (ISBN: ${book.isbn})")
+    }
+    val scanner = Scanner(System.`in`)
+    print("Enter the number of the book to return: ")
+    val idx = scanner.nextInt() - 1
+    scanner.nextLine()
+    if (idx in borrowedBooks.indices) {
+        val book = borrowedBooks[idx]
+        val file = File("library-data/borrowed_books.csv")
+        val lines = file.readLines().toMutableList()
+        val filtered = lines.filterIndexed { i, line ->
+            if (i == 0) true else {
+                val parts = line.split(",")
+                !(parts[0] == username && parts[3] == book.isbn)
+            }
+        }
+        file.writeText(filtered.joinToString("\n") + "\n")
+        // Update availability
+        val library = Library()
+        val bookInLibrary = library.books.find { it.isbn == book.isbn }
+        if (bookInLibrary != null) {
+            bookInLibrary.available = true
+            library.saveAllBooks()
+        }
+        println("You have returned \"${book.title}\".")
+    } else {
+        println("Invalid selection.")
+    }
+}
 
     fun rateBook() {
         println("+-------------------------------------------+")
@@ -1206,14 +1180,14 @@ class userLibrarian(var username: String, var pass: String, val library: Library
             println("|  (2) Remove a Book                        |")
             println("|  (3) Update Book Info                     |")
             println("|  (4) View All Books                       |")
-            println("|  (5) View Borrowed Books                  |") //TODO
-            println("|  (6) View Overdue Books                   |") //TODO tanggalin nlng to
-            println("|  (7) Manage Your Account                  |") 
-            println("|  (8) View Ratings and Reviews             |") //TODO
-            println("|  (9) Generate Library Reports             |") //TODO
-            println("| (10) Log Out                              |")
+            println("|  (5) View Borrowed Books                  |") 
+            // println("|  (6) View Overdue Books                   |") //TODO tanggalin nlng to
+            println("|  (6) Manage Your Account                  |") 
+            println("|  (7) View Ratings and Reviews             |") 
+            println("|  (8) Generate Library Reports             |") 
+            println("|  (9) Log Out                              |")
             println("+-------------------------------------------+")
-            print("Select (1-10): ")
+            print("Select (1-9): ")
 
             val choice = try {
                 scanner.nextInt().also { scanner.nextLine() }
@@ -1231,15 +1205,15 @@ class userLibrarian(var username: String, var pass: String, val library: Library
                 4 -> { library.displayBooks()
                     }
                 5 -> viewBorrowedBooks()
-                6 -> viewOverdueBooks()
-                7 -> {
+                // 6 -> viewOverdueBooks()
+                6 -> {
                     val deleted = manageAccount(scanner)
                     if (deleted) return LOGIN_SIGNUP
                     save()
                 }
-                8 -> viewRatingsAndReviews()
-                9 -> generateReports()
-                10 -> {
+                7 -> viewRatingsAndReviews()
+                8 -> generateReports()
+                9 -> {
                     println("Logging out...")
                     library.saveAllBooks()
                     return LOGIN_SIGNUP
@@ -1314,65 +1288,143 @@ class userLibrarian(var username: String, var pass: String, val library: Library
 
 
     fun viewBorrowedBooks() {
-        val borrowed = library.books.filter { !it.available }
-        if (borrowed.isEmpty()) {
+        val file = File("library-data/borrowed_books.csv")
+        if (!file.exists()) {
             println("No borrowed books.")
-        } else {
-            println("+-------------------------------------------+")
-            println("|        LIST OF BORROWED BOOKS             |")
-            println("+-------------------------------------------+")
-            borrowed.forEach {
-                println("${it.title} | ISBN: ${it.isbn}")
+            return
+        }
+        val lines = file.readLines()
+        if (lines.size <= 1) {
+            println("No borrowed books.")
+            return
+        }
+        println("+-------------------------------------------+")
+        println("|        LIST OF BORROWED BOOKS             |")
+        println("+-------------------------------------------+")
+        println("| User         | Title           | ISBN     |")
+        println("+-------------------------------------------+")
+        lines.drop(1).forEach { line ->
+            val parts = line.split(",")
+            if (parts.size >= 4) {
+                val user = parts[0]
+                val title = parts[1]
+                val isbn = parts[3]
+                println("| ${user.padEnd(13)}| ${title.padEnd(16)}| ${isbn.padEnd(8)}|")
             }
         }
+        println("+-------------------------------------------+")
     }
 
-    fun viewOverdueBooks() {
-        val now = Instant.now()
-        val overdue = library.books.filter { !it.available && it.dueDate?.isBefore(now) == true }
-        if (overdue.isEmpty()) {
-            println("No overdue books.")
-        } else {
-            println("+-------------------------------------------+")
-            println("|          LIST OF OVERDUE BOOKS            |")
-            println("+-------------------------------------------+")
-            overdue.forEach {
-                println("${it.title} | ISBN: ${it.isbn}")
-            }
-        }
-    }
+    // fun viewOverdueBooks() {
+    //     val now = Instant.now()
+    //     val overdue = library.books.filter { !it.available && it.dueDate?.isBefore(now) == true }
+    //     if (overdue.isEmpty()) {
+    //         println("No overdue books.")
+    //     } else {
+    //         println("+-------------------------------------------+")
+    //         println("|          LIST OF OVERDUE BOOKS            |")
+    //         println("+-------------------------------------------+")
+    //         overdue.forEach {
+    //             println("${it.title} | ISBN: ${it.isbn}")
+    //         }
+    //     }
+    // }
 
     fun viewRatingsAndReviews() {
-        if (library.reviews.isEmpty()) {
-            println("No reviews available.")
-        } else {
-            println("+-------------------------------------------+")
-            println("|          RATINGS AND REVIEWS              |")
-            println("+-------------------------------------------+")
+        val ratingsFile = File("library-data/ratings.csv")
+        val reviewsFile = File("library-data/reviews.csv")
 
-            for ((isbn, reviewList) in library.reviews) {
-                val title = library.books.find { it.isbn == isbn }?.title ?: "Unknown"
-                println("$title (ISBN: $isbn):")
-                reviewList.forEachIndexed { i, review ->
-                    println("  ${i + 1}. $review")
+        println("+-------------------------------------------+")
+        println("|          RATINGS AND REVIEWS              |")
+        println("+-------------------------------------------+")
+
+        if (ratingsFile.exists()) {
+            println("Ratings:")
+            val ratings = ratingsFile.readLines().drop(1)
+            if (ratings.isEmpty()) println("No ratings available.")
+            else ratings.forEach { line ->
+                val parts = line.split(",")
+                if (parts.size >= 3) {
+                    val user = parts[0]
+                    val isbn = parts[1]
+                    val rating = parts[2]
+                    println("User: $user | ISBN: $isbn | Rating: $rating")
                 }
             }
+        } else {
+            println("No ratings available.")
+        }
+
+        if (reviewsFile.exists()) {
+            println("\nReviews:")
+            val reviews = reviewsFile.readLines().drop(1)
+            if (reviews.isEmpty()) println("No reviews available.")
+            else reviews.forEach { line ->
+                val parts = line.split(",")
+                if (parts.size >= 3) {
+                    val user = parts[0]
+                    val isbn = parts[1]
+                    val review = parts.subList(2, parts.size).joinToString(",")
+                    println("User: $user | ISBN: $isbn | Review: $review")
+                }
+            }
+        } else {
+            println("No reviews available.")
         }
     }
 
     fun generateReports() {
-        val total = library.books.size
-        val available = library.books.count { it.available }
-        val borrowed = total - available
-        val overdue = library.books.count { it.dueDate?.isBefore(Instant.now()) == true }
+        val totalBooks = library.books.size
+        val availableBooks = library.books.count { it.available }
+
+        // Borrowed books (from CSV)
+        val borrowedFile = File("library-data/borrowed_books.csv")
+        val borrowedLines = if (borrowedFile.exists()) borrowedFile.readLines().drop(1) else emptyList()
+        val borrowedBooks = borrowedLines.size
+
+        val overdueBooks = library.books.count { it.dueDate?.isBefore(Instant.now()) == true }
+
+        // Readers
+        val users = LogInSignUp().retrieveReaders()
+        val totalUsers = users.size
+        val mostActiveReader = users.maxByOrNull { it.numberOfBooksRead }
+
+        // Most borrowed book
+        val bookBorrowCounts = mutableMapOf<String, Int>()
+        borrowedLines.forEach { line ->
+            val parts = line.split(",")
+            if (parts.size >= 4) {
+                val isbn = parts[3]
+                bookBorrowCounts[isbn] = bookBorrowCounts.getOrDefault(isbn, 0) + 1
+            }
+        }
+        val mostBorrowedBookIsbn = bookBorrowCounts.maxByOrNull { it.value }?.key
+        val mostBorrowedBook = library.books.find { it.isbn == mostBorrowedBookIsbn }
+
+        // Ratings and reviews
+        val ratingsFile = File("library-data/ratings.csv")
+        val reviewsFile = File("library-data/reviews.csv")
+        val totalRatings = if (ratingsFile.exists()) ratingsFile.readLines().drop(1).size else 0
+        val totalReviews = if (reviewsFile.exists()) reviewsFile.readLines().drop(1).size else 0
 
         println("+-------------------------------------------+")
         println("|             LIBRARY REPORT                |")
         println("+-------------------------------------------+")
-        println("Total Books: $total")
-        println("Available: $available")
-        println("Borrowed: $borrowed")
-        println("Overdue: $overdue")
+        println("Total Books: $totalBooks")
+        println("Available Books: $availableBooks")
+        println("Borrowed Books: $borrowedBooks")
+        println("Overdue Books: $overdueBooks")
+        println("Total Users: $totalUsers")
+        println("Total Borrowed Records: $borrowedBooks")
+        println("Total Ratings: $totalRatings")
+        println("Total Reviews: $totalReviews")
+        if (mostActiveReader != null) {
+            println("Most Active Reader: ${mostActiveReader.username} (${mostActiveReader.numberOfBooksRead} books read)")
+        }
+        if (mostBorrowedBook != null) {
+            println("Most Borrowed Book: ${mostBorrowedBook.title} (ISBN: ${mostBorrowedBook.isbn})")
+        }
+        println("+-------------------------------------------+")
     }
 
     fun manageAccount(scanner: Scanner): Boolean {
