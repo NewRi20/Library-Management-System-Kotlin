@@ -1181,7 +1181,6 @@ class userLibrarian(var username: String, var pass: String, val library: Library
             println("|  (3) Update Book Info                     |")
             println("|  (4) View All Books                       |")
             println("|  (5) View Borrowed Books                  |") 
-            // println("|  (6) View Overdue Books                   |") //TODO tanggalin nlng to
             println("|  (6) Manage Your Account                  |") 
             println("|  (7) View Ratings and Reviews             |") 
             println("|  (8) Generate Library Reports             |") 
@@ -1205,7 +1204,6 @@ class userLibrarian(var username: String, var pass: String, val library: Library
                 4 -> { library.displayBooks()
                     }
                 5 -> viewBorrowedBooks()
-                // 6 -> viewOverdueBooks()
                 6 -> {
                     val deleted = manageAccount(scanner)
                     if (deleted) return LOGIN_SIGNUP
@@ -1315,21 +1313,6 @@ class userLibrarian(var username: String, var pass: String, val library: Library
         println("+-------------------------------------------+")
     }
 
-    // fun viewOverdueBooks() {
-    //     val now = Instant.now()
-    //     val overdue = library.books.filter { !it.available && it.dueDate?.isBefore(now) == true }
-    //     if (overdue.isEmpty()) {
-    //         println("No overdue books.")
-    //     } else {
-    //         println("+-------------------------------------------+")
-    //         println("|          LIST OF OVERDUE BOOKS            |")
-    //         println("+-------------------------------------------+")
-    //         overdue.forEach {
-    //             println("${it.title} | ISBN: ${it.isbn}")
-    //         }
-    //     }
-    // }
-
     fun viewRatingsAndReviews() {
         val ratingsFile = File("library-data/ratings.csv")
         val reviewsFile = File("library-data/reviews.csv")
@@ -1382,8 +1365,6 @@ class userLibrarian(var username: String, var pass: String, val library: Library
         val borrowedLines = if (borrowedFile.exists()) borrowedFile.readLines().drop(1) else emptyList()
         val borrowedBooks = borrowedLines.size
 
-        val overdueBooks = library.books.count { it.dueDate?.isBefore(Instant.now()) == true }
-
         // Readers
         val users = LogInSignUp().retrieveReaders()
         val totalUsers = users.size
@@ -1413,7 +1394,6 @@ class userLibrarian(var username: String, var pass: String, val library: Library
         println("Total Books: $totalBooks")
         println("Available Books: $availableBooks")
         println("Borrowed Books: $borrowedBooks")
-        println("Overdue Books: $overdueBooks")
         println("Total Users: $totalUsers")
         println("Total Borrowed Records: $borrowedBooks")
         println("Total Ratings: $totalRatings")
